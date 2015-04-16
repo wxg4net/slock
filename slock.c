@@ -58,7 +58,16 @@ die(const char *errstr, ...)
 }
 
 #ifdef __linux__
+#include <X11/extensions/dpms.h>
 #include <fcntl.h>
+
+static void
+dpms_force_off(Display *dpy)
+{
+  DPMSEnable(dpy);
+  usleep(50000);
+  DPMSForceLevel(dpy, DPMSModeOff);
+}
 
 static void
 dontkillme(void)
@@ -327,7 +336,11 @@ main(int argc, char **argv) {
 		XCloseDisplay(dpy);
 		return 1;
 	}
-
+  
+  usleep(3000000);
+#ifdef __linux__
+  dpms_force_off(dpy);
+#endif
 	/* Everything is now blank. Now wait for the correct password. */
 #ifdef HAVE_BSD_AUTH
 	readpw(dpy);
